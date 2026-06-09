@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #fbfbfd;
+  --surface: #ffffff;
+  --ink: #1a1a22;
+  --ink-soft: #5b6472;
+  --hairline: #e7e8ee;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+}
+
+/* Subtle, even dot grid used behind the hero — quiet, not a glow. */
+.bg-dotgrid {
+  background-image: radial-gradient(circle, #d8dae3 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Honest "uncertain" texture: a soft diagonal hatch, never an alarm red. */
+.bg-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(91, 100, 114, 0.05),
+    rgba(91, 100, 114, 0.05) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
