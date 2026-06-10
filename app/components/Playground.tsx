@@ -53,10 +53,10 @@ export default function Playground() {
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <div className="mx-auto max-w-2xl text-center">
           <div className="text-xs font-semibold uppercase tracking-wider text-accent-fg">
-            Live demo · support workspace
+            06 · Live playground
           </div>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
-            Meridian Assist, inside a live ticket
+            Try it: you&rsquo;re the agent
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-neutral-500">
             A support agent is mid-conversation with a customer. Ask the assistant
@@ -66,7 +66,16 @@ export default function Playground() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start">
+        {/* Scenario framing — a quiet caption that sets who you are and the stakes */}
+        <p className="mx-auto mt-6 max-w-2xl text-center text-[13px] leading-relaxed text-neutral-500 sm:text-sm">
+          You&apos;re <span className="font-medium text-neutral-700">Maya</span>, a
+          support agent at Meridian.{" "}
+          <span className="font-medium text-neutral-700">Dana</span> from Acme
+          Logistics is asking about a refund. Ask the assistant — and notice how it
+          behaves when it knows vs. when it&apos;s guessing.
+        </p>
+
+        <div className="mt-8 grid gap-5 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start">
           {/* Mobile-only compact ticket; full conversation view on desktop */}
           <CompactTicket draft={draft} onClear={() => setDraft(null)} className="lg:hidden" />
           <ConversationPanel
@@ -83,10 +92,24 @@ export default function Playground() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent/40" />
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent" />
               </span>
-              <div>
+              <div className="min-w-0">
                 <div className="text-sm font-semibold text-neutral-900">Meridian Assist</div>
-                <div className="text-[11px] text-neutral-500">
+                <div className="truncate text-[11px] text-neutral-500">
                   AI · grounded in your Help Center
+                </div>
+              </div>
+              {/* The logged-in support agent, so the workspace feels inhabited */}
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <div className="hidden text-right sm:block">
+                  <div className="text-[11px] font-medium text-neutral-700">Maya R.</div>
+                  <div className="text-[10px] text-neutral-500">Support agent</div>
+                </div>
+                <div
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-soft text-[10px] font-semibold text-accent-fg"
+                  title="Signed in as Maya R."
+                  aria-label="Signed in as Maya R., support agent"
+                >
+                  MR
                 </div>
               </div>
             </div>

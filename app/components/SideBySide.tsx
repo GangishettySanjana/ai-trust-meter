@@ -87,10 +87,10 @@ export default function SideBySide() {
     <section id="demo" className="mx-auto max-w-5xl px-6 py-20 sm:py-28">
       <div className="mx-auto max-w-2xl text-center">
         <div className="text-xs font-semibold uppercase tracking-wider text-accent-fg">
-          One question, two interfaces
+          05 · Side by side
         </div>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
-          Confidence is a design decision
+          The same wrong answer, two interfaces
         </h2>
         <p className="mt-3 text-[15px] leading-relaxed text-neutral-500">
           Both cards answer the same question about Dana&apos;s refund — a genuine
@@ -140,7 +140,7 @@ export default function SideBySide() {
 
       <p className="mx-auto mt-8 max-w-xl text-center text-[13px] leading-relaxed text-neutral-500">
         The underlying answer is the same in both cases — a real gray area. Only
-        the <span className="text-neutral-500">interface</span> changed, and with
+        the <span className="text-neutral-500">interface</span> changed. And with
         it, whether the agent can tell a confident guess from a grounded fact
         before it reaches Dana.
       </p>
