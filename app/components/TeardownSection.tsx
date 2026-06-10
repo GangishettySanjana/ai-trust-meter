@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // TeardownImage — swappable screenshot slot. Falls back to a styled placeholder
 // when src is missing or fails to load. Drop a file into /public/teardown/ and
 // pass its path as src to promote the placeholder to a real screenshot.
+//
+// SSR-safe: a missing file 404s before React hydrates, so the <img> onError
+// never reattaches. We also check the image's loaded state on mount to catch
+// that pre-hydration error and fall back to the placeholder.
 // ---------------------------------------------------------------------------
 export function TeardownImage({
   src,
@@ -17,17 +21,25 @@ export function TeardownImage({
   caption: string;
 }) {
   const [errored, setErrored] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    setErrored(false);
+    const img = imgRef.current;
+    // If the load already failed before hydration, naturalWidth stays 0.
+    if (img && img.complete && img.naturalWidth === 0) setErrored(true);
+  }, [src]);
 
   if (src && !errored) {
     return (
       <figure className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          ref={imgRef}
           src={src}
           alt={alt}
           onError={() => setErrored(true)}
           className="w-full object-cover"
-          loading="lazy"
         />
         <figcaption className="border-t border-neutral-100 px-3 py-2 text-[11px] text-neutral-500">
           {caption}
@@ -138,6 +150,7 @@ export default function TeardownSection() {
         <TeardownCard
           product="Intercom Fin"
           tagline="AI agent that resolves customer questions from the help center"
+          imageSrc="/teardown/intercom-fin.png"
           imageAlt="Intercom Fin answer state screenshot"
           imageCaption="Screenshot: Intercom Fin answer state"
           annotations={[
@@ -154,6 +167,7 @@ export default function TeardownSection() {
         <TeardownCard
           product="Zendesk AI"
           tagline="Generative replies and agent assist inside Zendesk"
+          imageSrc="/teardown/zendesk-ai.png"
           imageAlt="Zendesk AI answer state screenshot"
           imageCaption="Screenshot: Zendesk AI answer state"
           annotations={[
@@ -170,6 +184,7 @@ export default function TeardownSection() {
         <TeardownCard
           product="Notion AI Q&A"
           tagline="Answers questions from across your Notion workspace"
+          imageSrc="/teardown/notion-ai.png"
           imageAlt="Notion AI Q&A answer state screenshot"
           imageCaption="Screenshot: Notion AI Q&A answer state"
           annotations={[
