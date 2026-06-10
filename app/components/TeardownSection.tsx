@@ -7,9 +7,10 @@ import { useEffect, useRef, useState } from "react";
 // when src is missing or fails to load. Drop a file into /public/teardown/ and
 // pass its path as src to promote the placeholder to a real screenshot.
 //
-// SSR-safe: a missing file 404s before React hydrates, so the <img> onError
-// never reattaches. We also check the image's loaded state on mount to catch
-// that pre-hydration error and fall back to the placeholder.
+// Flash-free + SSR-safe: the <img> is mounted but hidden, and only reveals once
+// it successfully loads (onLoad). A missing file never fires onLoad, so the
+// placeholder simply stays — no broken-image icon and no pre-hydration flash.
+// Drop a real file in and it swaps itself in automatically.
 // ---------------------------------------------------------------------------
 export function TeardownImage({
   src,
@@ -20,58 +21,65 @@ export function TeardownImage({
   alt: string;
   caption: string;
 }) {
-  const [errored, setErrored] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  // The image may finish (or fail) loading before React hydrates, in which case
+  // neither onLoad nor onError fires. Check the real DOM state on mount: reveal
+  // the image only if it actually decoded (naturalWidth > 0); otherwise the
+  // placeholder stays. No broken-image icon, no flash.
   useEffect(() => {
-    setErrored(false);
+    setLoaded(false);
     const img = imgRef.current;
-    // If the load already failed before hydration, naturalWidth stays 0.
-    if (img && img.complete && img.naturalWidth === 0) setErrored(true);
+    if (img && img.complete && img.naturalWidth > 0) setLoaded(true);
   }, [src]);
 
-  if (src && !errored) {
-    return (
-      <figure className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+  return (
+    <figure
+      className={`overflow-hidden rounded-xl bg-neutral-50 ${
+        loaded ? "border border-neutral-200" : "border border-dashed border-neutral-300"
+      }`}
+    >
+      {src && (
+        /* eslint-disable-next-line @next/next/no-img-element */
         <img
           ref={imgRef}
           src={src}
           alt={alt}
-          onError={() => setErrored(true)}
-          className="w-full object-cover"
+          onLoad={() => setLoaded(true)}
+          className={`w-full object-cover ${loaded ? "block" : "hidden"}`}
         />
+      )}
+      {loaded ? (
         <figcaption className="border-t border-neutral-100 px-3 py-2 text-[11px] text-neutral-500">
           {caption}
         </figcaption>
-      </figure>
-    );
-  }
-
-  // Placeholder — lightweight, no network request
-  return (
-    <div
-      className="flex min-h-[160px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-4 py-6 text-center"
-      aria-label={caption}
-    >
-      {/* Image icon — inline SVG, zero weight */}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-6 w-6 text-neutral-300"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-        <circle cx="8.5" cy="8.5" r="1.5" />
-        <polyline points="21 15 16 10 5 21" />
-      </svg>
-      <span className="text-[12px] font-medium text-neutral-400">{caption}</span>
-    </div>
+      ) : (
+        // Placeholder — lightweight, no broken-image state
+        <div
+          className="flex min-h-[160px] flex-col items-center justify-center gap-2 px-4 py-6 text-center"
+          aria-label={caption}
+        >
+          {/* Image icon — inline SVG, zero weight */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-neutral-300"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+          <span className="text-[12px] font-medium text-neutral-500">{caption}</span>
+        </div>
+      )}
+    </figure>
   );
 }
 
