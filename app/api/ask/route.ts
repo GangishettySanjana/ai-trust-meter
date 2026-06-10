@@ -6,7 +6,7 @@ import type { AskResponse, TrustAnswer, Confidence } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODEL = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.3-70b-instruct:free";
+const MODEL = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
 const SYSTEM_PROMPT = `You are "Meridian Assist", the AI assistant inside Meridian, a fictional B2B customer-support platform. A human support agent is mid-conversation with a customer and is asking you for help. Answer using ONLY the provided Help Center documentation — your answer may be inserted directly into a reply to the customer, so being honest about uncertainty matters more than sounding confident.
 
