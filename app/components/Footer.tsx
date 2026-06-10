@@ -13,7 +13,7 @@ export default function Footer() {
             Sanjana Gangishetty
           </a>
         </p>
-        <p className="text-xs text-neutral-400">
+        <p className="text-xs text-neutral-500">
           A concept demo · Meridian is fictional · no real data
         </p>
       </div>

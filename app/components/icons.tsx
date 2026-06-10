@@ -120,3 +120,42 @@ export function Spinner({ className }: IconProps) {
     </svg>
   );
 }
+
+export function Escalate({ className }: IconProps) {
+  // "Escalate to a human" — an arrow stepping up.
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M8 13V4m0 0L4.5 7.5M8 4l3.5 3.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function CreditCard({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={className} aria-hidden="true">
+      <rect x="2" y="4" width="12" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M2 7h12" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M4.5 10h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function Send({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={className} aria-hidden="true">
+      <path
+        d="M14 2L7 9M14 2l-4.5 12-2.5-5-5-2.5L14 2z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

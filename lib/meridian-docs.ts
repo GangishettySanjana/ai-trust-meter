@@ -1,8 +1,14 @@
 /**
- * A small fictional knowledge base for "Meridian", a made-up B2B SaaS company.
- * These docs are the only ground truth the playground model is allowed to use.
- * They're deliberately incomplete — some example questions have no answer here,
- * which is the whole point of the demo.
+ * The fictional knowledge base for "Meridian", a B2B customer-support platform
+ * (think Intercom / Zendesk). These docs are the ONLY ground truth the AI
+ * assistant is allowed to use when a support agent asks it a question.
+ *
+ * The set is deliberately incomplete in specific ways so the live demo can
+ * reproduce all three confidence states:
+ *   - The refund policy covers a clean 30-day window (grounded) but leaves the
+ *     45-day annual case to a discretionary exception (inferred — a gray zone).
+ *   - Enterprise contract terms and custom-discount authority appear in NO doc
+ *     (uncertain — the assistant must redirect to a human, not guess).
  */
 
 export interface MeridianDoc {
@@ -18,50 +24,65 @@ export const MERIDIAN_DOCS: MeridianDoc[] = [
     title: "Refund Policy",
     body: `# Refund Policy
 
-Meridian offers a 14-day money-back guarantee on all annual plans. To request a
-refund, customers must email billing@meridian.example within 14 days of the
-initial charge. Refunds are processed to the original payment method within 5–7
-business days.
+Customers on **monthly** plans may request a full refund within **30 days** of
+their initial purchase by contacting support. Refunds are issued to the original
+payment method within 5–7 business days.
 
-Monthly plans are non-refundable, but customers can cancel at any time to stop
-future charges. Cancellation takes effect at the end of the current billing
-cycle. We do not offer prorated refunds for partial months.
+**Annual** plans are not covered by the standard 30-day window. Annual customers
+who are dissatisfied may be eligible for a discretionary, prorated refund on a
+case-by-case basis. The support team can request this exception through a
+manager, but approval is not guaranteed and depends on usage and account
+standing.
 
-Refunds are not available for usage-based overage charges (e.g. additional API
-calls beyond the plan limit).`,
+Refunds do not apply to usage-based overage charges (e.g. API calls beyond the
+plan limit). The terms above describe Meridian's standard published policy.`,
   },
   {
-    id: "onboarding-sop",
-    title: "Customer Onboarding SOP",
-    body: `# Customer Onboarding SOP
+    id: "sla-tiers",
+    title: "Support SLA Tiers",
+    body: `# Support SLA Tiers
 
-New Enterprise customers are assigned a dedicated Onboarding Specialist within
-one business day of signing. The standard onboarding timeline is 30 days and
-covers four milestones:
+Priority support first-response targets by plan:
 
-1. Kickoff call (day 1–3): goals, success metrics, and access provisioning.
-2. Workspace setup (day 4–10): SSO configuration, team imports, and roles.
-3. Integration & data migration (day 11–20): connect existing tools and import
-   historical data.
-4. Training & go-live (day 21–30): admin training, end-user webinar, handoff to
-   the Customer Success Manager.
+- **Starter** — community forum only; no guaranteed response time.
+- **Growth** — email support; first response within **4 business hours** for
+  priority issues. Support hours are Mon–Fri, 9am–6pm US Eastern.
+- **Enterprise** — priority support; first response within **1 business hour**
+  for P1 issues, with 24/7 weekend coverage.
 
-Self-serve (Starter and Growth) customers receive an automated onboarding email
-sequence and access to the Help Center, but no dedicated specialist.`,
+A "priority issue" is anything blocking the customer's core workflow. Lower
+severity questions follow the next-business-day target on Growth.`,
+  },
+  {
+    id: "escalation-sop",
+    title: "Escalation SOP",
+    body: `# Escalation SOP
+
+When a request falls outside published policy or needs an exception, agents
+should escalate rather than improvise:
+
+- Billing disputes, refund exceptions, and payment issues → route to the
+  **Billing team** via the #billing-escalations queue.
+- Account or contract changes → escalate to a **Customer Success Manager**.
+- Anything requiring manager sign-off (e.g. goodwill credits) → tag your shift
+  lead.
+
+Never commit to a refund, credit, discount, or contract change that isn't
+covered by published policy without approval. When in doubt, confirm with a
+human before replying to the customer.`,
   },
   {
     id: "pricing-tiers",
     title: "Pricing Tiers",
     body: `# Pricing Tiers
 
-Meridian has three plans, billed per seat per month:
+Meridian is billed per seat per month:
 
-- Starter — $12/seat/mo. Up to 10 seats. Core features, community support,
-  10,000 API calls/month included.
-- Growth — $29/seat/mo. Up to 50 seats. Adds automations, advanced analytics,
-  priority email support, and 100,000 API calls/month.
-- Enterprise — custom pricing. Unlimited seats. Adds SSO/SAML, audit logs,
-  dedicated onboarding, a Customer Success Manager, and a 99.9% uptime SLA.
+- **Starter** — $12/seat/mo, up to 10 seats. Core features, community support.
+- **Growth** — $29/seat/mo, up to 50 seats. Adds automations, advanced
+  analytics, and priority email support.
+- **Enterprise** — custom pricing, unlimited seats. Adds SSO/SAML, audit logs, a
+  dedicated Customer Success Manager, and a 99.9% uptime SLA.
 
 Annual billing saves 20% versus monthly. Overage API calls are billed at $1 per
 1,000 calls above the plan limit.`,
@@ -71,105 +92,38 @@ Annual billing saves 20% versus monthly. Overage API calls are billed at $1 per
     title: "Security FAQ",
     body: `# Security FAQ
 
-**Where is data hosted?** Meridian runs on AWS in the us-east-1 (N. Virginia)
-and eu-west-1 (Ireland) regions. Enterprise customers can choose their data
-residency region during onboarding.
+**Where is data hosted?** Meridian runs on AWS in us-east-1 (N. Virginia) and
+eu-west-1 (Ireland). Enterprise customers can choose their data residency region
+during onboarding.
 
-**Is data encrypted?** Yes. All data is encrypted in transit (TLS 1.2+) and at
-rest (AES-256).
+**Is data encrypted?** Yes — in transit (TLS 1.2+) and at rest (AES-256).
 
-**What compliance certifications do you hold?** Meridian is SOC 2 Type II
-certified and GDPR compliant. A copy of our SOC 2 report is available under NDA
-to Enterprise customers.
+**Compliance?** Meridian is SOC 2 Type II certified and GDPR compliant. The SOC 2
+report is available under NDA to Enterprise customers.
 
-**Do you support SSO?** SAML-based SSO is available on the Enterprise plan.
-
-**How are passwords stored?** Passwords are hashed with bcrypt. Meridian staff
-never have access to plaintext customer passwords.`,
-  },
-  {
-    id: "pto-policy",
-    title: "PTO Policy (Internal)",
-    body: `# PTO Policy (Internal — Employees)
-
-Meridian employees accrue paid time off based on tenure:
-
-- 0–2 years: 18 days/year
-- 3–5 years: 23 days/year
-- 6+ years: 28 days/year
-
-PTO accrues monthly and up to 5 unused days may be carried into the next
-calendar year. Carryover days must be used by March 31 or they are forfeited.
-
-Sick leave is separate and uncapped, but absences of 3+ consecutive days require
-a doctor's note. PTO requests should be submitted in Workday at least two weeks
-in advance for stretches longer than three days.`,
-  },
-  {
-    id: "support-sla",
-    title: "Support SLA",
-    body: `# Support & Response Times
-
-Support response targets by plan:
-
-- Starter — community forum only; no guaranteed response time.
-- Growth — email support, first response within 1 business day.
-- Enterprise — priority support, first response within 4 business hours for
-  urgent (P1) issues, 1 business day for normal issues.
-
-Support hours are Monday–Friday, 9am–6pm US Eastern, excluding US public
-holidays. There is no weekend or 24/7 phone support on any plan.`,
-  },
-  {
-    id: "data-export",
-    title: "Data Export & Portability",
-    body: `# Data Export & Portability
-
-Customers can export their workspace data at any time from Settings → Data
-Export. Exports are generated as a downloadable ZIP containing CSV files for
-records and a JSON file for configuration.
-
-Large exports (over 1 GB) are processed asynchronously and a download link is
-emailed when ready, valid for 48 hours. On account cancellation, customer data
-is retained for 30 days to allow export, then permanently deleted.`,
-  },
-  {
-    id: "integrations",
-    title: "Integrations Directory",
-    body: `# Integrations
-
-Meridian connects to common tools via native integrations:
-
-- Slack — notifications and slash commands.
-- Google Workspace & Microsoft 365 — calendar and SSO.
-- Salesforce & HubSpot — two-way contact and deal sync (Growth and above).
-- Zapier — connect to 5,000+ apps.
-- Webhooks & REST API — available on all plans for custom integrations.
-
-Integrations are configured under Settings → Integrations by a workspace admin.
-The Salesforce and HubSpot syncs are not available on the Starter plan.`,
+**SSO?** SAML-based SSO is available on the Enterprise plan.`,
   },
 ];
 
 /** Compact, model-friendly rendering of the whole knowledge base. */
 export function docsAsContext(): string {
-  return MERIDIAN_DOCS.map(
-    (d) => `### DOC: ${d.title}\n${d.body}`
-  ).join("\n\n");
+  return MERIDIAN_DOCS.map((d) => `### DOC: ${d.title}\n${d.body}`).join("\n\n");
 }
 
-/** Suggested questions for the playground. Mix of answerable + unanswerable. */
+/**
+ * Suggested questions a support agent might ask the assistant mid-conversation.
+ * The `expected` hint is for the designer's own reference — it is NOT shown to
+ * users and NOT sent to the model.
+ */
 export interface SuggestedQuestion {
   q: string;
-  /** Hint for the designer's own reference — not shown to users. */
-  expected: "answerable" | "partial" | "unanswerable";
+  expected: "grounded" | "inferred" | "uncertain";
 }
 
 export const SUGGESTED_QUESTIONS: SuggestedQuestion[] = [
-  { q: "Can I get a refund on a monthly plan?", expected: "answerable" },
-  { q: "How long does Enterprise onboarding take?", expected: "answerable" },
-  { q: "What's the difference between the Growth and Enterprise plans?", expected: "answerable" },
-  { q: "Do you offer 24/7 phone support?", expected: "answerable" },
-  { q: "What's Meridian's parental leave policy?", expected: "unanswerable" },
-  { q: "Can I deploy Meridian on-premise in my own data center?", expected: "unanswerable" },
+  { q: "What's our refund policy?", expected: "grounded" },
+  { q: "Can Acme get a refund at 45 days?", expected: "inferred" },
+  { q: "Do enterprise contracts have different refund terms?", expected: "uncertain" },
+  { q: "What's our SLA for priority support?", expected: "grounded" },
+  { q: "Can we offer Dana a custom discount instead?", expected: "uncertain" },
 ];

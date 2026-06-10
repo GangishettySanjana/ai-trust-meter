@@ -4,26 +4,29 @@ import { useState } from "react";
 import type { TrustAnswer } from "@/lib/types";
 import AnswerCard from "./AnswerCard";
 
-// The shared (wrong) question both AIs answer. The honest answer is "this isn't
-// in the docs" — but today's AI fabricates a confident, specific reply.
-const QUESTION =
-  "What's the penalty if Meridian's uptime drops below the 99.9% SLA?";
+// The shared question — the same refund case the live demo runs on, so the two
+// sections tell one continuous story. Acme is on an annual plan, 45 days in: a
+// genuine gray area the docs only partly cover.
+const QUESTION = "Can we still refund Acme 45 days after signup?";
 
-// "Today's AI" — fluent, specific, authoritative, and entirely made up.
+// "Today's AI" — fluent, specific, authoritative, and confidently wrong (45 days
+// is past the 30-day window, and annual plans aren't covered by it at all).
 const NAIVE_ANSWER =
-  "If uptime falls below the 99.9% SLA, Meridian automatically credits 10% of your monthly fee for every 0.1% below target, up to a maximum of 50%. Credits are applied to your next invoice within one billing cycle.";
+  "Yes — Acme is covered by Meridian's 30-day money-back guarantee, so Dana is eligible for a full refund. It'll be processed to the original payment method within 5–7 business days.";
 
 // The exact same situation, wrapped in the confidence-state system. The docs
-// mention a 99.9% uptime SLA but say nothing about penalties — so: low.
+// define a clean 30-day window but leave the 45-day annual case to a
+// discretionary exception — so this is honestly an inferred answer, not a fact.
 const TRUST_ANSWER: TrustAnswer = {
   answer:
-    "I don't have a grounded answer for this. The Meridian docs mention a 99.9% uptime SLA on the Enterprise plan, but nothing about service credits or penalties for missing it.",
-  confidence: "low",
-  source: null,
+    "It's not clear-cut. Acme is past the standard 30-day window, and their annual plan isn't covered by it. There's a discretionary exception for annual customers, so a prorated refund may be possible — but it's case-by-case and not guaranteed.",
+  confidence: "medium",
+  source:
+    'Refund Policy — "Annual plans are not covered by the standard 30-day window… may be eligible for a discretionary, prorated refund on a case-by-case basis."',
   reasoning:
-    "The SLA target appears in the Pricing doc, but no document defines remedies, credits, or penalties — so any specific figure would be fabricated.",
+    "The docs define a clean 30-day window for monthly plans, but Acme is on an annual plan at 45 days — that falls under a discretionary exception, not a guaranteed refund.",
   missing_info:
-    "An SLA remedies / service-credit clause (often in the MSA or order form), which isn't part of this knowledge base.",
+    "Whether a manager will approve the exception for this account — the policy leaves it to case-by-case judgment.",
 };
 
 function PlainCard({ animate }: { animate: boolean }) {
@@ -60,7 +63,7 @@ function Toggle({
       onClick={() => onChange(!on)}
       className="inline-flex items-center gap-2.5 text-sm font-medium text-neutral-600"
     >
-      <span className={!on ? "text-neutral-900" : "text-neutral-400"}>Raw AI</span>
+      <span className={!on ? "text-neutral-900" : "text-neutral-500"}>Raw AI</span>
       <span
         className={`relative h-6 w-11 rounded-full transition-colors duration-300 ${
           on ? "bg-accent" : "bg-neutral-300"
@@ -72,7 +75,7 @@ function Toggle({
           }`}
         />
       </span>
-      <span className={on ? "text-accent-fg" : "text-neutral-400"}>Trust UI</span>
+      <span className={on ? "text-accent-fg" : "text-neutral-500"}>Trust UI</span>
     </button>
   );
 }
@@ -84,22 +87,22 @@ export default function SideBySide() {
     <section id="demo" className="mx-auto max-w-5xl px-6 py-20 sm:py-28">
       <div className="mx-auto max-w-2xl text-center">
         <div className="text-xs font-semibold uppercase tracking-wider text-accent-fg">
-          The same wrong answer, two ways
+          One question, two interfaces
         </div>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl">
           Confidence is a design decision
         </h2>
         <p className="mt-3 text-[15px] leading-relaxed text-neutral-500">
-          Both cards answer the same question — one the docs can&apos;t actually
-          support. Watch how differently the honest answer <em>feels</em> when the
-          interface stops pretending.
+          Both cards answer the same question about Dana&apos;s refund — a genuine
+          gray area. One pretends to be sure. Watch how differently the honest
+          answer <em>feels</em> when the interface stops pretending.
         </p>
       </div>
 
       {/* The shared question */}
       <div className="mx-auto mt-10 max-w-xl">
         <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-center text-sm text-neutral-700 shadow-sm">
-          <span className="font-medium text-neutral-400">Q&nbsp;·&nbsp;</span>
+          <span className="font-medium text-neutral-500">Q&nbsp;·&nbsp;</span>
           {QUESTION}
         </div>
       </div>
@@ -135,11 +138,11 @@ export default function SideBySide() {
         </div>
       </div>
 
-      <p className="mx-auto mt-8 max-w-xl text-center text-[13px] leading-relaxed text-neutral-400">
-        The underlying model gave the same ungrounded answer in both cases. Only
-        the <span className="text-neutral-500">interface</span> changed — and
-        with it, whether a user can tell the difference between knowledge and a
-        guess.
+      <p className="mx-auto mt-8 max-w-xl text-center text-[13px] leading-relaxed text-neutral-500">
+        The underlying answer is the same in both cases — a real gray area. Only
+        the <span className="text-neutral-500">interface</span> changed, and with
+        it, whether the agent can tell a confident guess from a grounded fact
+        before it reaches Dana.
       </p>
     </section>
   );

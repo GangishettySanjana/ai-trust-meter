@@ -47,3 +47,58 @@ export const SEGMENTS: { key: ConfidenceState["segment"]; label: string }[] = [
   { key: "inferred", label: "Inferred" },
   { key: "uncertain", label: "Uncertain" },
 ];
+
+/**
+ * The consequence layer: what an agent is allowed to DO with an answer of each
+ * confidence level. This is part of the variant system on purpose — the action
+ * a card offers is a property of its trust state, not a one-off page condition.
+ *
+ *   grounded  → insert directly into the customer reply
+ *   inferred  → insert, but only after a review-before-sending confirmation
+ *   uncertain → no insert at all; redirect the agent to a human instead
+ */
+export type AnswerActionKind = "insert" | "insert-confirm" | "redirect";
+
+export interface RedirectAction {
+  label: string;
+  /** Icon key resolved in the AnswerCard. */
+  icon: "escalate" | "billing";
+}
+
+export interface AnswerActionConfig {
+  kind: AnswerActionKind;
+  /** Label for the primary insert button (insert / insert-confirm). */
+  primaryLabel?: string;
+  /** Copy for the inferred confirmation step. */
+  confirm?: {
+    message: string;
+    reviewLabel: string;
+    insertLabel: string;
+  };
+  /** Human-redirect affordances shown instead of an insert (uncertain). */
+  redirect?: RedirectAction[];
+}
+
+export const ANSWER_ACTIONS: Record<Confidence, AnswerActionConfig> = {
+  high: {
+    kind: "insert",
+    primaryLabel: "Insert into reply",
+  },
+  medium: {
+    kind: "insert-confirm",
+    primaryLabel: "Insert into reply",
+    confirm: {
+      message:
+        "This answer is inferred, not taken directly from a policy doc. Review before sending?",
+      reviewLabel: "Review source",
+      insertLabel: "Insert anyway",
+    },
+  },
+  low: {
+    kind: "redirect",
+    redirect: [
+      { label: "Escalate to manager", icon: "escalate" },
+      { label: "Check with billing team", icon: "billing" },
+    ],
+  },
+};

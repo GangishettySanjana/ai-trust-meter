@@ -15,21 +15,23 @@ export default function Hero() {
         </h1>
 
         <p
-          className="animate-fade-in-up mx-auto mt-5 max-w-xl text-lg text-neutral-600 sm:text-xl"
+          className="animate-fade-in-up mx-auto mt-5 max-w-2xl text-lg text-neutral-600 sm:text-xl"
           style={{ animationDelay: "0.06s" }}
         >
-          What if AI interfaces were honest about uncertainty?
+          When an AI answer is about to reach a customer, the interface should
+          know the difference between certain and guessing.
         </p>
 
         <p
           className="animate-fade-in-up mx-auto mt-6 max-w-2xl text-[15px] leading-relaxed text-neutral-500"
           style={{ animationDelay: "0.12s" }}
         >
-          AI features in B2B tools present wrong answers with the same confidence
-          as right ones — same tone, same polish, no signal. This is a design
-          system where the interface visibly changes based on how grounded the
-          answer actually is, with source attribution and reasoning you can
-          inspect.
+          AI features present wrong answers with the same confidence as right
+          ones. This design system lives inside Meridian — a fictional B2B
+          support platform — where a support agent&apos;s AI assistant visibly
+          changes its treatment based on how grounded an answer is: sources and
+          reasoning when it&apos;s certain, and a redirect to a human when it&apos;s
+          guessing.
         </p>
 
         <div

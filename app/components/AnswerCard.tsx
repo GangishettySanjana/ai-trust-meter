@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import type { TrustAnswer } from "@/lib/types";
-import { CONFIDENCE } from "@/lib/confidence";
+import { useEffect, useId, useRef, useState } from "react";
+import type { Confidence, TrustAnswer } from "@/lib/types";
+import { CONFIDENCE, ANSWER_ACTIONS } from "@/lib/confidence";
 import ConfidenceChip from "./ConfidenceChip";
 import TrustMeter from "./TrustMeter";
-import { Chevron, DocIcon, SearchOff, ArrowRight } from "./icons";
+import {
+  Chevron,
+  DocIcon,
+  SearchOff,
+  ArrowRight,
+  CheckCircle,
+  Escalate,
+  CreditCard,
+} from "./icons";
 
 // Per-tone card surface treatment. Each state should FEEL different at a glance,
 // without relying on color alone — borders, texture, and structure differ too.
@@ -30,6 +38,9 @@ const HEDGES = [
   "suggests",
   "could be",
   "i'd estimate",
+  "discretionary",
+  "case-by-case",
+  "not guaranteed",
 ];
 
 function HighlightHedges({ text }: { text: string }) {
@@ -91,17 +102,193 @@ function Expander({
   );
 }
 
+const REDIRECT_ICON = {
+  escalate: Escalate,
+  billing: CreditCard,
+} as const;
+
+// One consistent keyboard focus ring across every action control.
+const FOCUS_RING =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2";
+
+/**
+ * The consequence row. What an agent may DO with the answer is a property of the
+ * confidence state (see ANSWER_ACTIONS), not a page-level condition — so this
+ * row reads its entire behavior from the variant config.
+ *
+ *   grounded  → primary "Insert into reply"
+ *   inferred  → "Insert into reply" gated behind a review-before-sending step
+ *   uncertain → no insert; two human-redirect affordances instead
+ */
+function AnswerActions({
+  confidence,
+  answerText,
+  onInsert,
+  onReviewSource,
+}: {
+  confidence: Confidence;
+  answerText: string;
+  onInsert: (text: string) => void;
+  onReviewSource: () => void;
+}) {
+  const action = ANSWER_ACTIONS[confidence];
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [inserted, setInserted] = useState(false);
+  const confirmRef = useRef<HTMLDivElement>(null);
+  const insertBtnRef = useRef<HTMLButtonElement>(null);
+  // Associates the confirm buttons with the warning text so a screen reader
+  // announces *why* it's asking, not just the button label.
+  const msgId = useId();
+
+  // Move focus into the confirmation step when it opens (keyboard accessibility).
+  useEffect(() => {
+    if (confirmOpen) {
+      confirmRef.current?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    }
+  }, [confirmOpen]);
+
+  function doInsert() {
+    onInsert(answerText);
+    setInserted(true);
+    setConfirmOpen(false);
+  }
+
+  function cancelConfirm() {
+    setConfirmOpen(false);
+    insertBtnRef.current?.focus();
+  }
+
+  const wrap = "mt-4 border-t border-neutral-200/60 pt-4";
+
+  // After a successful insert, every state collapses to the same confirmation.
+  if (inserted) {
+    return (
+      <div className={wrap}>
+        <div className="animate-chip-in flex items-center gap-2 text-[13px] font-semibold text-grounded-fg">
+          <CheckCircle className="h-4 w-4" />
+          Added to Dana&apos;s reply draft
+        </div>
+      </div>
+    );
+  }
+
+  // UNCERTAIN — the insert action is removed entirely; redirect to a human.
+  if (action.kind === "redirect") {
+    return (
+      <div className={wrap}>
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-uncertain-fg">
+          This one needs a human
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {action.redirect!.map((r) => {
+            const Icon = REDIRECT_ICON[r.icon];
+            return (
+              <button
+                key={r.label}
+                type="button"
+                title="Demo only"
+                aria-label={`${r.label} (demo only)`}
+                className={`inline-flex items-center gap-1.5 rounded-lg border border-uncertain/40 bg-white/70 px-3 py-2 text-[13px] font-semibold text-uncertain-fg transition-colors hover:bg-white ${FOCUS_RING}`}
+              >
+                <Icon className="h-4 w-4" />
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-[12px] leading-relaxed text-neutral-500">
+          When the assistant can&apos;t ground an answer, the UI routes the agent
+          to a person — instead of letting a guess reach the customer.
+        </p>
+      </div>
+    );
+  }
+
+  // GROUNDED / INFERRED — an insert button (inferred gates it behind a confirm).
+  return (
+    <div className={wrap}>
+      {!confirmOpen ? (
+        <div className="flex items-center gap-2">
+          <button
+            ref={insertBtnRef}
+            type="button"
+            onClick={() =>
+              action.kind === "insert-confirm" ? setConfirmOpen(true) : doInsert()
+            }
+            className={`inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02] active:scale-100 ${FOCUS_RING}`}
+          >
+            <ArrowRight className="h-4 w-4" />
+            {action.primaryLabel}
+          </button>
+          {action.kind === "insert-confirm" && (
+            <span className="text-[12px] text-inferred-fg">Review step before sending</span>
+          )}
+        </div>
+      ) : (
+        action.confirm && (
+          <div
+            ref={confirmRef}
+            role="group"
+            aria-label="Review this inferred answer before inserting it into the reply"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") cancelConfirm();
+            }}
+            className="animate-expand overflow-hidden rounded-lg border border-inferred/30 bg-inferred-soft/70 p-3"
+          >
+            <p id={msgId} className="text-[13px] leading-relaxed text-inferred-fg">
+              {action.confirm.message}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                data-autofocus
+                type="button"
+                onClick={onReviewSource}
+                aria-describedby={msgId}
+                className={`inline-flex items-center gap-1.5 rounded-lg border border-inferred/40 bg-white px-3 py-1.5 text-[13px] font-semibold text-inferred-fg transition-colors hover:bg-inferred-soft ${FOCUS_RING}`}
+              >
+                {action.confirm.reviewLabel}
+              </button>
+              <button
+                type="button"
+                onClick={doInsert}
+                aria-describedby={msgId}
+                className={`inline-flex items-center gap-1.5 rounded-lg bg-inferred px-3 py-1.5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 ${FOCUS_RING}`}
+              >
+                {action.confirm.insertLabel}
+              </button>
+              <button
+                type="button"
+                onClick={cancelConfirm}
+                aria-describedby={msgId}
+                className={`rounded-lg px-2 py-1.5 text-[13px] font-medium text-neutral-500 transition-colors hover:text-neutral-700 ${FOCUS_RING}`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
 export default function AnswerCard({
   answer,
   animate = false,
+  onInsert,
 }: {
   answer: TrustAnswer;
   animate?: boolean;
+  /**
+   * When provided, the card enters "workspace" mode and renders the consequence
+   * action row. Omit it (e.g. in the hardcoded Section 2 demo) to show the card
+   * with no insert affordance.
+   */
+  onInsert?: (text: string) => void;
 }) {
   const [sourceOpen, setSourceOpen] = useState(false);
   const [whyOpen, setWhyOpen] = useState(false);
   const state = CONFIDENCE[answer.confidence];
-  const tone = state.tone;
 
   return (
     <div
@@ -113,7 +300,7 @@ export default function AnswerCard({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-xs font-medium text-neutral-500">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
-          Meridian Assistant
+          Meridian Assist
         </div>
         <ConfidenceChip confidence={answer.confidence} animate={animate} />
       </div>
@@ -147,7 +334,7 @@ export default function AnswerCard({
             />
           </button>
           {sourceOpen && (
-            <blockquote className="animate-expand mt-2 overflow-hidden rounded-lg border-l-2 border-grounded/50 bg-white/70 px-3 py-2 text-[13px] leading-relaxed text-neutral-600">
+            <blockquote className="animate-expand mt-2 overflow-hidden rounded-lg border border-grounded/25 bg-grounded-soft/50 px-3 py-2 text-[13px] leading-relaxed text-neutral-700">
               {answer.source}
             </blockquote>
           )}
@@ -192,30 +379,36 @@ export default function AnswerCard({
           {answer.missing_info && (
             <div className="rounded-lg border border-uncertain/30 bg-white/70 p-3">
               <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-uncertain-fg">
-                What I'd need to answer this
+                What I&apos;d need to answer this
               </div>
               <p className="text-[13px] leading-relaxed text-neutral-600">
                 {answer.missing_info}
               </p>
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-[13px] text-neutral-500">
-            <ArrowRight className="h-3.5 w-3.5 shrink-0 text-uncertain" />
-            Try rephrasing, or route this to a human teammate.
-          </div>
         </div>
       )}
 
       {/* The trust meter — same component on every state, segment shifts */}
       <div className="mt-5 border-t border-neutral-200/70 pt-4">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
             Trust meter
           </span>
-          <span className="text-[11px] text-neutral-400">{state.stance}</span>
+          <span className="text-[11px] text-neutral-500">{state.stance}</span>
         </div>
         <TrustMeter confidence={answer.confidence} />
       </div>
+
+      {/* The consequence row — only in workspace mode (when an insert handler exists) */}
+      {onInsert && (
+        <AnswerActions
+          confidence={answer.confidence}
+          answerText={answer.answer}
+          onInsert={onInsert}
+          onReviewSource={() => setWhyOpen(true)}
+        />
+      )}
     </div>
   );
 }
